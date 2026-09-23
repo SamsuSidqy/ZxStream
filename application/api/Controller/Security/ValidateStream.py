@@ -22,7 +22,7 @@ class ValidateStreamView(View):
 		# 3. Logika validasi stream key (sesuaikan dengan database Anda)
 		stream = StreamKey.objects.filter(stream=stream_key).first()
 		if stream:
-			pritn('ada stream')
+			print('ada stream')
 			# Status 200 OK: Nginx mengizinkan streaming dimulai
 			return HttpResponse("OK", status=200)
 		else:
