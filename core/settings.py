@@ -31,7 +31,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['localhost', os.environ.get('HOST'),'stream.abisamsu.dev','host.docker.internal']
+ALLOWED_HOSTS = ['localhost', os.environ.get('HOST'),'stream.abisamsu.dev','host.docker.internal','127.0.0.1']
 
 
 # Application definition
