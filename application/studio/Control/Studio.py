@@ -17,8 +17,6 @@ class StudioPage(LoginRequiredMixin,TemplateView):
 
 	def get_context_data(self,**kwargs):
 		context = super().get_context_data(**kwargs)
-		keystream = StreamKey.objects.filter(user=self.request.user.id).first()
-		streamInit = StreamingPluggin(keystream.stream).check_rtmp_stat()
 		context['stream_form'] = StreamKeyForm(
 			request=self.request
 		)
@@ -26,8 +24,17 @@ class StudioPage(LoginRequiredMixin,TemplateView):
 			request=self.request
 		)
 		
+		keystream = StreamKey.objects.filter(user=self.request.user.id).first()
+		if keystream:
+			streamInit = StreamingPluggin(keystream.stream).check_rtmp_stat()
+			context['status'] = streamInit
+		else:
+			context['status'] = {
+				"is_online":False
+			}
+			
 		context['stream_key'] = keystream
-		context['status'] = streamInit
+		
 		context['streams'] = Streaming.objects.filter(user=self.request.user.id).first()
 		context['kategori'] = KategoriStreaming.objects.all()		
 		return context
