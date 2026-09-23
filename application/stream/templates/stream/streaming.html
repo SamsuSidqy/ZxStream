@@ -1,0 +1,366 @@
+{% extends 'layout/homepage.html' %}
+
+{% block content %}
+<div id="detailView" class="flex-1 max-w-6xl w-full mx-auto px-4 md:px-5 py-6">
+    <div class="flex flex-col lg:flex-row gap-6 items-start relative">
+        <div class="flex-1 w-full space-y-6 min-w-0">
+
+            <!-- Video Player Container -->
+            <div id="playerContainer" class="relative w-full aspect-video bg-pureblack border-2 border-white overflow-hidden group shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+
+                <!-- Video Element / Offline Placeholder Wrapper -->
+                <div id="mediaWrapper" class="w-full h-full relative">
+                    {% if is_online %}
+                        <!-- HLS Video Player -->
+                        <video id="hlsVideo" class="w-full h-full object-cover" poster="/wp-content/thumbnail/{{stream.thumbnail}}" playsinline></video>
+                    {% endif %}
+
+                    <!-- Offline placeholder -->
+                    <div id="offlineOverlay" class="w-full h-full flex flex-col items-center justify-center bg-neutral-950 text-center px-6 space-y-3 {% if is_online %}hidden{% endif %}">
+                        <div class="w-16 h-16 border-2 border-white bg-pureblack flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] animate-bounce">
+                            <i class="fa-solid fa-video-slash text-2xl text-white"></i>
+                        </div>
+                        <h4 id="offlineTitle" class="text-sm font-black uppercase tracking-wider text-white">Streamer Sedang Tidak Live</h4>
+                        <p id="offlineDesc" class="text-[11px] text-neutral-400 leading-relaxed max-w-[280px]">
+                            Siaran belum dimulai atau telah dihentikan. Halaman akan otomatis memuat ulang saat streamer online kembali.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Live Badge / Status Header -->
+                <div id="statusBadgeContainer" class="absolute top-4 left-4 z-20">
+                    {% if is_online %}
+                        <div id="liveBadge" class="bg-red-600 text-white text-xs font-black px-3 py-1 border-2 border-white flex items-center gap-1.5 uppercase shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+                            <span class="w-2 h-2 bg-white animate-ping rounded-full"></span>
+                            LIVE
+                        </div>
+                    {% else %}
+                        <div id="liveBadge" class="bg-neutral-700 text-white text-xs font-black px-3 py-1 border-2 border-white flex items-center gap-1.5 uppercase shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+                            <span class="w-2 h-2 bg-neutral-400"></span>
+                            OFFLINE
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Stats Overlay (Viewers & Category) -->
+                <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
+                    {% if is_online %}                        
+                    {% endif %}
+                    <div id="detailCategoryBadge" class="bg-pureblack border-2 border-white text-white text-xs px-3 py-1 font-bold uppercase shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+                        {{ stream.kategori.title }}
+                    </div>
+                </div>
+
+                <!-- Rigid Player Custom Controls -->
+                {% if is_online %}
+                <div id="playerControls" class="absolute inset-x-0 bottom-0 bg-pureblack/95 border-t-2 border-white p-3 md:p-4 flex items-center justify-between z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div class="flex items-center space-x-3">
+                        <button type="button" onclick="togglePlayPause()" class="w-9 h-9 bg-white text-black font-bold flex items-center justify-center border-2 border-white hover:bg-neutral-200 transition active:scale-95">
+                            <i id="playPauseIcon" class="fa-solid fa-pause"></i>
+                        </button>
+                        <button type="button" onclick="toggleMute()" class="w-9 h-9 bg-white text-black font-bold flex items-center justify-center border-2 border-white hover:bg-neutral-200 transition active:scale-95">
+                            <i id="muteIcon" class="fa-solid fa-volume-xmark text-red-600"></i>
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                            <span id="detailDuration" class="text-xs font-black uppercase tracking-wider hidden sm:block text-white">Siaran Langsung</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <!-- Quality Selector Dropdown Menu -->
+                        <div class="relative">
+                            <button type="button" onclick="toggleQualityMenu()" class="h-9 px-3 bg-white text-black text-xs font-black flex items-center gap-1.5 border-2 border-white hover:bg-neutral-200 transition active:scale-95">
+                                <i class="fa-solid fa-gear"></i>
+                                <span id="currentQualityLabel">Auto</span>
+                            </button>
+                            <div id="qualityMenu" class="hidden absolute right-0 bottom-full mb-2 w-32 bg-pureblack border-2 border-white shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] z-30 py-1">
+                                <button onclick="setQuality(-1)" class="w-full text-left px-3 py-1.5 text-xs font-bold text-white hover:bg-white hover:text-black transition uppercase">Auto</button>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="toggleFullscreen()" class="w-9 h-9 bg-white text-black font-bold flex items-center justify-center border-2 border-white hover:bg-neutral-200 transition active:scale-95">
+                            <i id="fa-expand" class="fa-solid fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Detail Stream Info Card -->
+            <div class="bg-pureblack border-2 border-white p-6 space-y-4 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b-2 border-white">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-white border-2 border-white overflow-hidden shrink-0 shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+                            <img id="detailAvatar" src="https://i0.wp.com/e-quester.com/wp-content/uploads/2021/11/placeholder-image-person-jpg.jpg?fit=820%2C678&ssl=1" alt="{{ stream.user.username }}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h2 id="detailTitle" class="text-base md:text-xl font-black text-white uppercase tracking-tight">{{ stream.title }}</h2>
+                            <p id="detailCreator" class="text-xs text-neutral-300 mt-1 font-bold">
+                                {{ stream.user.username }} •
+                                <span id="streamStatusText" class="text-neutral-400 font-normal">
+                                    {% if is_online %}Streaming Aktif{% else %}Offline{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" id="detailFollowBtn"
+                        data-following="false"
+                        onclick="toggleFollow()"
+                        class="bg-white text-black hover:bg-neutral-200 font-black px-6 py-2.5 text-xs border-2 border-white transition uppercase tracking-wider shrink-0 shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-y-0.5">
+                        Ikuti
+                    </button>
+                </div>
+
+                <!-- Description Text -->
+                <div>
+                    <h3 class="font-black text-xs uppercase text-white mb-2 tracking-wider border-l-4 border-white pl-2">Deskripsi Siaran</h3>
+                    <p id="detailDescriptionText" class="text-xs text-neutral-300 leading-relaxed font-mono mt-2 bg-neutral-950 p-3 border border-neutral-800">
+                        {{ stream.deskripsi }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Recommended Streams Section -->
+            <div class="pt-4">
+                <h3 class="font-black text-sm uppercase text-white mb-4 tracking-wider border-b-2 border-white pb-2 flex items-center justify-between">
+                    <span>Referensi Video Lainnya</span>
+                    <i class="fa-solid fa-compass text-xs text-neutral-400"></i>
+                </h3>
+                <div id="recommendedGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Placeholder Rekomendasi -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Chat Section -->
+        <div class="w-full lg:w-[380px] bg-pureblack border-2 border-white flex flex-col h-[500px] lg:h-[700px] lg:sticky lg:top-24 shrink-0 relative shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+            <div class="px-4 py-3 border-b-2 border-white flex items-center justify-between bg-white text-black font-black">
+                <span class="text-sm uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-comments"></i> Live Chat
+                </span>
+                <span class="text-[10px] bg-neutral-800 text-white px-2 py-0.5 uppercase border border-black font-bold">Segera Hadir</span>
+            </div>
+            <div class="absolute inset-0 top-[49px] z-10 bg-pureblack/95 backdrop-blur-[2px] flex flex-col items-center justify-center text-center px-6 space-y-3">
+                <div class="w-14 h-14 border-2 border-white bg-neutral-900 flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">
+                    <i class="fa-solid fa-comment-slash text-xl text-white"></i>
+                </div>
+                <h4 class="text-sm font-black uppercase tracking-wider text-white">Fitur Chat Segera Hadir</h4>
+                <p class="text-[11px] text-neutral-400 leading-relaxed max-w-[220px]">
+                    Live chat sedang dalam tahap pengembangan. Nantikan update selanjutnya.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% if is_online %}
+<!-- Load Hls.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+    var video = document.getElementById('hlsVideo');
+    var hlsUrl = "{% url 'api:hls-stream' kode=stream.kode %}";
+    var hlsRetryCount = 0;
+    var maxHlsRetries = 1;
+    var hlsInstance = null;
+
+    if (video) {
+        video.muted = true;
+        const muteIcon = document.getElementById('muteIcon');
+        if (muteIcon) {
+            muteIcon.className = "fa-solid fa-volume-xmark text-red-600";
+        }
+    }
+
+    function handleStreamOffline() {
+        if (hlsInstance) {
+            hlsInstance.destroy();
+            hlsInstance = null;
+        }
+        if (video) {
+            video.style.display = 'none';
+        }
+        const offlineOverlay = document.getElementById('offlineOverlay');
+        if (offlineOverlay) {
+            offlineOverlay.classList.remove('hidden');
+        }
+        const liveBadge = document.getElementById('liveBadge');
+        if (liveBadge) {
+            liveBadge.className = "bg-neutral-700 text-white text-xs font-black px-3 py-1 border-2 border-white flex items-center gap-1.5 uppercase shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]";
+            liveBadge.innerHTML = '<span class="w-2 h-2 bg-neutral-400"></span> OFFLINE';
+        }
+        const statusText = document.getElementById('streamStatusText');
+        if (statusText) {
+            statusText.textContent = 'Offline';
+        }
+        const controls = document.getElementById('playerControls');
+        if (controls) {
+            controls.style.display = 'none';
+        }
+        const viewerStats = document.getElementById('viewerStats');
+        if (viewerStats) {
+            viewerStats.style.display = 'none';
+        }
+        console.warn("Streamer telah menghentikan siaran atau batas koneksi maksimal tercapai.");
+    }
+
+    function startPlayer() {
+        if (!video) return;
+
+        if (Hls.isSupported()) {
+            hlsInstance = new Hls({
+                maxBufferLength: 30,
+                maxMaxBufferLength: 60,
+            });
+            
+            hlsInstance.loadSource(hlsUrl);
+            hlsInstance.attachMedia(video);
+
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                hlsRetryCount = 0;
+                buildQualityMenu(hlsInstance.levels);
+
+                video.play().catch(function (error) {
+                    console.log("Autoplay dicegah oleh browser:", error);
+                });
+            });
+
+            hlsInstance.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    console.error("HLS fatal error terdeteksi:", data);
+                    
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            hlsRetryCount++;
+                            if (hlsRetryCount >= maxHlsRetries) {
+                                handleStreamOffline();
+                            } else {
+                                hlsInstance.startLoad();
+                            }
+                            break;
+
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            hlsRetryCount++;
+                            if (hlsRetryCount >= maxHlsRetries) {
+                                handleStreamOffline();
+                            } else {
+                                hlsInstance.recoverMediaError();
+                            }
+                            break;
+
+                        default:
+                            handleStreamOffline();
+                            break;
+                    }
+                }
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = hlsUrl;
+            video.addEventListener('loadedmetadata', function () {
+                video.play().catch(function (error) {
+                    console.log("Autoplay dicegah:", error);
+                });
+            });
+            video.addEventListener('error', function() {
+                hlsRetryCount++;
+                if (hlsRetryCount >= maxHlsRetries) {
+                    handleStreamOffline();
+                }
+            });
+        }
+    }
+
+    startPlayer();
+
+    // Fungsi Render Pilihan Kualitas Dinamis (Mendeteksi 1080p, 720p, dll secara otomatis)
+    function buildQualityMenu(levels) {
+        const menu = document.getElementById('qualityMenu');
+        if (!menu) return;
+        
+        let html = `<button onclick="setQuality(-1)" class="w-full text-left px-3 py-1.5 text-xs font-bold text-white hover:bg-white hover:text-black transition uppercase">Auto</button>`;
+        
+        if (levels && levels.length > 0) {
+            levels.forEach((level, index) => {
+                let label = level.height ? `${level.height}p` : `Kualitas ${index + 1}`;
+                html += `<button onclick="setQuality(${index})" class="w-full text-left px-3 py-1.5 text-xs font-bold text-white hover:bg-white hover:text-black transition uppercase">${label}</button>`;
+            });
+        }
+        
+        menu.innerHTML = html;
+    }
+
+    function toggleQualityMenu() {
+        const menu = document.getElementById('qualityMenu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        }
+    }
+
+    function setQuality(levelIndex) {
+        if (!hlsInstance) return;
+        hlsInstance.currentLevel = levelIndex;
+        
+        const labelEl = document.getElementById('currentQualityLabel');
+        if (labelEl) {
+            if (levelIndex === -1) {
+                labelEl.textContent = "Auto";
+            } else {
+                let currentLvl = hlsInstance.levels[levelIndex];
+                labelEl.textContent = currentLvl && currentLvl.height ? `${currentLvl.height}p` : "Custom";
+            }
+        }
+        toggleQualityMenu();
+    }
+
+    function togglePlayPause() {
+        if (!video) return;
+        const icon = document.getElementById('playPauseIcon');
+        if (video.paused) {
+            video.play();
+            if (icon) icon.className = "fa-solid fa-pause";
+        } else {
+            video.pause();
+            if (icon) icon.className = "fa-solid fa-play";
+        }
+    }
+
+    function toggleMute() {
+        if (!video) return;
+        video.muted = !video.muted;
+        const icon = document.getElementById('muteIcon');
+        if (icon) {
+            icon.className = video.muted ? "fa-solid fa-volume-xmark text-red-600" : "fa-solid fa-volume-high text-black";
+        }
+    }
+
+    function toggleFullscreen() {
+        const playerContainer = document.getElementById('playerContainer');
+        if (!document.fullscreenElement) {
+            playerContainer.requestFullscreen().catch(err => console.error(err));
+        } else {
+            document.exitFullscreen();
+        }
+    }
+</script>
+{% endif %}
+
+<script>
+    function toggleFollow() {
+        const btn = document.getElementById('detailFollowBtn');
+        const following = btn.dataset.following === 'true';
+
+        if (!following) {
+            btn.dataset.following = 'true';
+            btn.textContent = 'MENGIKUTI';
+            btn.className = "bg-pureblack text-white font-black px-6 py-2.5 text-xs border-2 border-white transition uppercase tracking-wider shrink-0 shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-y-0.5";
+        } else {
+            btn.dataset.following = 'false';
+            btn.textContent = 'Ikuti';
+            btn.className = "bg-white text-black hover:bg-neutral-200 font-black px-6 py-2.5 text-xs border-2 border-white transition uppercase tracking-wider shrink-0 shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-y-0.5";
+        }
+    }
+</script>
+{% endblock %}

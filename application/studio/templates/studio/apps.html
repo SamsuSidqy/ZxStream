@@ -1,0 +1,204 @@
+{% extends 'layout/homepage.html' %}
+
+{% block content %}
+        <!-- Header Halaman ala YouTube Studio -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b-2 border-neutral-800">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Setelan Siaran Langsung</h1>
+                <p class="text-xs text-neutral-400 mt-1">Kelola detail ⁠stream, pantau ingest credentials, dan tinjau performa siaran Anda.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                {% if status.is_online %}
+                <span class="inline-flex items-center gap-2 bg-neutral-900 border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Status: Online
+                </span>
+                {% else %}
+                <span class="inline-flex items-center gap-2 bg-neutral-900 border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-300">
+                    <span class="w-2 h-2 rounded-full bg-neutral-500"></span>
+                    Status: Offline
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Grid Utama Layout YouTube Studio (Kiri: Form Detail, Kanan: Preview & Stream Key) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+            <!-- ============ KOLOM KIRI: DETAIL SIARAN (8 Kolom) ============ -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <section class="bg-black border border-neutral-800 p-6">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-white pb-4 mb-5 border-b border-neutral-800">Detail Siaran</h2>
+
+                    <form method="post" class="space-y-5" enctype="multipart/form-data">
+                    	{% csrf_token %}
+                    	<input type="hidden" readonly name="type" value="1">
+                        <!-- Judul -->
+                        <div>
+                            <label for="judul" class="block text-xs font-bold uppercase text-neutral-300 mb-2">Judul (Wajib)</label>
+                            <input type="text" id="judul" name="{{streaming_form.title.name}}" required placeholder="Tambahkan judul yang mendeskripsikan siaran Anda..."
+                            	{% if streams %}
+                            	value="{{streams.title}}" 
+                            	{% endif %}
+                                class="w-full bg-neutral-950 text-white text-sm px-3.5 py-2.5 border border-neutral-700 focus:outline-none focus:border-white transition">           
+                        </div>
+
+                        <!-- Deskripsi -->
+                        <div>
+                            <label for="deskripsi" class="block text-xs font-bold uppercase text-neutral-300 mb-2">Deskripsi</label>
+                            <textarea id="deskripsi" name="{{streaming_form.deskripsi.name}}" rows="4" placeholder="Ceritakan kepada penonton tentang siaran Anda..."                
+                                class="w-full bg-neutral-950 text-white text-sm p-3.5 border border-neutral-700 focus:outline-none focus:border-white transition leading-relaxed">{% if streams %} {{streams.deskripsi}} {% endif %}</textarea>
+                        </div>
+
+                        <!-- Grid Kategori & Thumbnail -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                                <label for="kategori" class="block text-xs font-bold uppercase text-neutral-300 mb-2">Kategori</label>
+                                <select id="kategori" name="{{streaming_form.kategori.name}}"
+                                	{% if streams %}
+	                            	value="{{streams.kategori}}" 
+	                            	{% endif %}
+                                    class="w-full bg-neutral-950 text-white text-sm px-3.5 py-2.5 border border-neutral-700 focus:outline-none focus:border-white transition">
+                                    {% for data in kategori %}
+                                    <option value="{{data.id}}">{{data.title}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label for="thumbnail" class="block text-xs font-bold uppercase text-neutral-300 mb-2">Thumbnail Custom</label>
+                                <input type="file" id="thumbnail" name="{{streaming_form.filegambar.name}}" accept="image/*"
+                                    class="w-full bg-neutral-950 text-neutral-400 text-xs p-2 border border-neutral-700 file:mr-3 file:border file:border-neutral-600 file:bg-neutral-900 file:text-white file:px-3 file:py-1 file:text-xs cursor-pointer">
+                            </div>
+                        </div>
+
+                        <!-- Konfigurasi Tambahan ala YouTube -->
+                        <div class="border border-neutral-800 bg-neutral-950 p-4 space-y-4 pt-4">
+                            <span class="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Setelan Interaksi & Publikasi</span>
+                            
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" name="chat" disabled class="mt-0.5 w-4 h-4 accent-white bg-neutral-900 border-neutral-700">
+                                <div>
+                                    <span class="block text-xs font-bold text-white">Aktifkan Live Chat</span>
+                                    <span class="block text-[11px] text-neutral-400">Izinkan penonton berpartisipasi dan mengirim pesan real-time.</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Tombol Aksi -->
+                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-neutral-800">
+                            <button type="reset" class="px-5 py-2.5 text-xs font-bold uppercase text-neutral-400 hover:text-white transition">
+                                Batalkan
+                            </button>
+                            <button type="submit" class="bg-white hover:bg-neutral-200 text-black px-6 py-2.5 text-xs font-bold uppercase transition">
+                                Simpan
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+
+            <!-- ============ KOLOM KANAN: STREAM SETTINGS & INGEST (4 Kolom) ============ -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <aside id="stream-key" class="bg-black border border-neutral-800 p-6">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-white pb-4 mb-5 border-b border-neutral-800">Setelan Ingest RTMP</h2>
+
+                    <div class="space-y-4 text-xs">
+                        <!-- Server URL -->
+                        <div>
+                            <label class="block font-bold text-neutral-300 mb-1.5 uppercase">URL Stream</label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" readonly value="rtmps://stream.abisamsu.dev/live"
+                                    class="select-all w-full bg-neutral-950 text-neutral-300 p-2.5 border border-neutral-700 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Stream Key -->
+                        <div>
+						    <label class="block font-bold text-neutral-300 mb-1.5 uppercase">Kunci Stream (Stream Key)</label>
+						    <input type="checkbox" id="showKey" class="sr-only">
+						        {% if stream_key %}
+                                    <!-- Jika stream key sudah ada -->
+                                    <div class="space-y-3">
+                                        <!-- Input dan Tombol Salin -->
+                                        <div class="flex gap-2">
+                                            <input type="text" id="streamKeyInput" readonly value="{{ stream_key.stream }}"
+                                                class="key-real select-all w-full bg-neutral-900 text-white p-2.5 border border-neutral-700 focus:outline-none">
+                                            
+                                            <button type="button" onclick="copyStreamKey()"
+                                                class="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2.5 border border-neutral-700 text-xs font-medium uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-1.5">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                </svg>
+                                                <span id="copyText">Salin</span>
+                                            </button>
+                                        </div>
+
+                                        <form method="post" class="space-y-3">
+                                            {% csrf_token %}
+                                            <input type="hidden" readonly name="type" value="3">
+                                            
+                                            <div class="[&>input]:w-full [&>input]:bg-neutral-950 [&>input]:text-white [&>input]:p-2.5 [&>input]:border [&>input]:border-neutral-700">
+                                                {{ stream_form.stream }}
+                                            </div>
+
+                                            <button type="submit"
+                                                class="w-full bg-white hover:bg-neutral-200 text-black font-bold uppercase text-xs tracking-wider px-4 py-3 border border-white transition-all text-center">
+                                                Generate Ulang
+                                            </button>
+                                        </form>                                
+                                    </div>
+                                {% else %}
+						        <!-- Jika belum ada: Tampilkan form generate dengan gaya tombol yang senada -->
+						        <form method="post" class="space-y-3">
+						            {% csrf_token %}
+						            <input type="hidden" readonly name="type" value="2">
+						            <!-- Jika stream_form memiliki widget, pastikan stylenya disesuaikan, atau gunakan wrapper ini -->
+						            <div class="[&>input]:w-full [&>input]:bg-neutral-950 [&>input]:text-white [&>input]:p-2.5 [&>input]:border [&>input]:border-neutral-700">
+						                {{ stream_form.stream }}
+						            </div>
+
+						            <button type="submit"
+						                class="w-full bg-white hover:bg-neutral-200 text-black font-bold uppercase text-xs tracking-wider px-4 py-3 border border-white transition-all text-center">
+						                Generate Stream Key
+						            </button>
+						        </form>
+						    {% endif %}
+						</div>
+
+
+
+                        <div class="p-3 bg-neutral-950 border border-neutral-800 text-[11px] text-neutral-400 leading-relaxed">
+                            Tempelkan URL dan Kunci di atas ke pengaturan software encoder Anda (seperti OBS Studio) pada menu <strong class="text-white">Settings > Stream > Custom</strong>.
+                        </div>
+                        <form action="{% url 'stream:logout' %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full bg-white hover:bg-neutral-200 text-black font-bold uppercase text-xs tracking-wider px-4 py-3 border border-white transition-all text-center">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+<script>
+    function copyStreamKey() {
+        const inputElement = document.getElementById('streamKeyInput');
+        const copyTextSpan = document.getElementById('copyText');
+        
+        // Salin teks ke clipboard
+        navigator.clipboard.writeText(inputElement.value).then(() => {
+            // Ubah teks tombol sementara menjadi "Tersalin"
+            copyTextSpan.textContent = 'Tersalin!';
+            
+            setTimeout(() => {
+                copyTextSpan.textContent = 'Salin';
+            }, 2000);
+        }).catch(err => {
+            console.error('Gagal menyalin teks: ', err);
+        });
+    }
+</script>        
+{% endblock %}

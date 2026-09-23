@@ -1,0 +1,7 @@
+__pycache__
+__init__.py
+migrations/
+.env
+theme/
+media/uploading/*
+staticfiles/

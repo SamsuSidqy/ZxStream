@@ -1,0 +1,67 @@
+{% extends 'layout/homepage.html' %}
+
+{% block content %}
+
+<div class="max-w-xs mx-auto my-20 bg-pureblack border border-white/70 px-7 py-8 shadow-[5px_5px_0px_0px_rgba(255,255,255,0.7)]">
+
+    <!-- Header Title -->
+    <div class="mb-7 text-center">
+        <h2 class="text-lg font-bold uppercase tracking-[0.25em] text-white">Login</h2>
+        <div class="w-8 h-px bg-white/40 mx-auto mt-3 mb-3"></div>
+        <p class="text-[10px] text-neutral-500 tracking-wide">Masukkan kredensial akun Anda</p>
+    </div>
+
+    <!-- Form Login CCBV (LoginView) -->
+    <form method="post" class="space-y-5">
+        {% csrf_token %}
+
+        <!-- Menampilkan Error Umum/Non-field -->
+        {% if form.non_field_errors %}
+        <div class="p-2 bg-red-950/30 border border-red-700/60 text-red-300 text-[11px]">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Looping Field Form Django -->
+        {% for field in form %}
+        <div class="space-y-1.5">
+            <label for="{{ field.id_for_label }}" class="block text-[10px] font-medium uppercase tracking-[0.15em] text-neutral-400">
+                {{ field.label }}
+            </label>
+
+            <!-- Render Input Field -->
+            <div class="w-full [&_input]:w-full [&_input]:bg-transparent [&_input]:border-0 [&_input]:border-b [&_input]:border-white/30 [&_input]:px-0 [&_input]:py-1.5 [&_input]:text-sm [&_input]:text-white [&_input]:focus:outline-none [&_input]:focus:border-white [&_input]:transition-colors">
+                {{ field }}
+            </div>
+
+            <!-- Pesan Error per Field -->
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <p class="text-[10px] text-red-400">{{ error }}</p>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Tombol Submit -->
+        <div class="pt-3">
+            <button type="submit" class="w-full py-2 bg-white text-black font-semibold uppercase text-[11px] tracking-[0.2em] hover:bg-neutral-200 transition duration-150 active:translate-x-0.5 active:translate-y-0.5">
+                Masuk
+            </button>
+        </div>
+    </form>
+
+    <!-- Footer Tambahan -->
+    <!-- <div class="mt-7 text-center">
+        <div class="w-8 h-px bg-white/20 mx-auto mb-4"></div>
+        <p class="text-[10px] text-neutral-500">
+            Belum punya akun?
+            <a href="/register/" class="text-white font-medium underline underline-offset-2 hover:text-neutral-300">Daftar</a>
+        </p>
+    </div> -->
+
+</div>
+
+{% endblock %}

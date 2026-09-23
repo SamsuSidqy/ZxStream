@@ -1,0 +1,42 @@
+{% extends 'layout/homepage.html' %}
+
+{% block content %}
+
+<!-- Category Filter Buttons -->
+        <div class="flex items-center gap-3 overflow-x-auto pb-4 mb-8 border-b border-white/20">
+            <a href="/" class="px-6 py-2.5 {% if request.GET.zx_kategori  %} bg-pureblack text-white {% else %} bg-white text-black  {% endif %} font-bold border-2 border-white text-sm uppercase tracking-wider shrink-0">Semua</a>
+            {% for data in kategori %}
+            <a href="/?zx_kategori={{data.slug}}" class="px-6 py-2.5 {% if request.GET.zx_kategori != data.slug  %} bg-pureblack text-white {% else %} bg-white text-black  {% endif %}font-bold border-2 border-white text-sm uppercase tracking-wider hover:bg-white hover:text-black transition shrink-0">{{data.title}}</a>
+            {% endfor %}
+
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for stream in streamOnline %}
+            <a href="/watch?zx={{stream.kode}}" class="group flex flex-col space-y-3 bg-pureblack border-2 border-white p-3 hover:bg-neutral-900 transition-all duration-150">
+                <div class="relative w-full aspect-video border-2 border-white overflow-hidden bg-neutral-900">
+                    <img src="/wp-content/thumbnail/{{stream.thumbnail}}" alt="Live Mabar Valorant Road to Radiant" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 border border-white flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(255,255,255,1)]">
+                        <span class="w-1.5 h-1.5 bg-white animate-pulse"></span>
+                        LIVE
+                    </div>
+                    <div class="absolute bottom-2 right-2 bg-pureblack text-white border border-white text-[10px] px-2 py-0.5 font-bold uppercase">
+                        {{stream.kategori.title}}
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 bg-white border-2 border-white overflow-hidden shrink-0">
+                        <img src="https://i0.wp.com/e-quester.com/wp-content/uploads/2021/11/placeholder-image-person-jpg.jpg?fit=820%2C678&ssl=1" alt="Ujeng TV" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-xs font-bold uppercase truncate text-white">{{stream.title}}</h3>
+                        <p class="text-[11px] text-neutral-300 mt-1 truncate">{{stream.user.username}}</p>
+                        <!-- <p class="text-[10px] text-neutral-500 mt-0.5 font-mono">1 Menit Yang Lalu</p> -->
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+
+{% endblock %}
